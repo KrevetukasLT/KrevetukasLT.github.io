@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 pelm = document.querySelectorAll(".price");
                 pelm.forEach(elm => {
+                    console.log("price exec")
                     if (pricesData["result"]) {
                         const id = elm.id;
                         if (!pricesData.hasOwnProperty(id)) {
@@ -88,37 +89,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // This first click listener seems to only check if a click is inside a link
-    // but doesn't prevent default or initiate navigation. It might be redundant
-    // if the second click listener handles all link clicks appropriately.
-    // If it's for a different purpose, ensure it's not interfering.
-    /*
-    document.addEventListener('click', function(event) {
-        let clickedElement = event.target;
-        let isInsideLink = false;
-      
-        while (clickedElement) {
-          if (clickedElement.tagName === 'A') {
-            isInsideLink = true;
-            break;
-          }
-          clickedElement = clickedElement.parentElement;
-        }
-      
-        if (!isInsideLink) {
-            return;
-        }
-    });
-    */
-
     fetch(pricesURL)
         .then(response => {
             if (!response.ok)
             {
                 throw new Error("Failed to fetch prices");
             }
-            pricesData = response.json();
-            pricesData["result"] = true;
+            pricesData = response.json()
+                .then(pdata => {
+                    pricesData = pdata;
+                    pricesData["result"] = true;
+                });
         })
         .catch(error => {
             console.error("Error fetching prices:", error);
