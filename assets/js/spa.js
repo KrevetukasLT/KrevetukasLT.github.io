@@ -1,14 +1,41 @@
 const reload = new Event('spa-reload');
 
-const pricesURL = "https://api.jsonbin.io/v3/b/684db7dd8a456b7966ae2a8a?t=" + new Date().getTime()
+const pricesURL = "https://api.jsonbin.io/v3/b/684db7dd8a456b7966ae2a8a";
+const fallback_pricesURL = ""
 let pricesData = {"result": false};
 
+async function fetchPriceData(url, isJsonBin = false) {
+    const urlWithCacheBuster = url + "?t=" + new Date().getTime();
+    
+    const fetchOptions = {
+        cache: "no-store",
+    };
+
+    if (isJsonBin) {
+        fetchOptions.headers = {
+            "X-Bin-Meta": "false",
+            "X-Access-Key": "$2a$10$arXBN1Yi.R4AhW.LPVkvT.wmvyjCDPtQgK3zj.OqpjAfsF5SBndja" // It's read-only
+        };
+    }
+
+    const response = await fetch(urlWithCacheBuster, fetchOptions);
+    if (!response.ok) {
+        console.warn(`Fetch failed for ${url}. Status: ${response.status} ${response.statusText}`);
+        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    
+    if (isJsonBin && data.hasOwnProperty("success") && data.success === false) {
+        console.warn(`JSONBin.io returned success: false for ${url}. Message: ${data.message || 'Unknown error'}`);
+        throw new Error(`JSONBin.io error: ${data.message || 'Unknown error'}`);
+    }
+    return data;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Add an 'updateHistory' parameter, defaulting to true
     window.loadContent = function(urlPath, updateHistory = true) {
         let filePath;
 
-        // Normalize path and determine filePath
         if (urlPath === '' || urlPath === '/' || urlPath === '/index.html' || urlPath === '/index') {
             urlPath = '/';
             filePath = '/raw/home.html';
@@ -59,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 document.querySelector('#content').innerHTML = doc.body.innerHTML;
                 
-                // Only push state if updateHistory is true (i.e., not a popstate call)
                 if (updateHistory) {
                     history.pushState({ path: urlPath }, document.title, urlPath);
                 }
@@ -87,41 +113,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    fetch(pricesURL, {
-        cache: "no-store",
-        headers: {
-            "X-Bin-Meta": false,
-            "X-Access-Key": "$2a$10$arXBN1Yi.R4AhW.LPVkvT.wmvyjCDPtQgK3zj.OqpjAfsF5SBndja" // It's read-only
-        }})
-        .then(response => {
-            if (!response.ok)
-            {
-                throw new Error("Failed to fetch prices");
-            }
-            pricesData = response.json()
-                .then(pdata => {
-                    pricesData = pdata;
-                    pricesData["result"] = true;
-
-                    document.body.querySelectorAll(".price").forEach(elm => {
-                        if (pricesData["result"]) {
-                            const id = elm.id;
-                            if (!pricesData.hasOwnProperty(id)) {
-                                elm.textContent = "X€";
-                                return;
-                            }
-
-                            elm.textContent = pricesData[id]["price"] + '€';
-                        }
-                        else {
-                            elm.textContent = "ERR";
-                        }
-                    });
-                });
+    fetchPriceData(pricesURL, true)
+        .then(data => {
+            pricesData = data;
+            pricesData["result"] = true;
         })
-        .catch(error => {
-            console.error("Error fetching prices:", error);
-            pricesData = {"result": false};
+        .catch(async error => {
+            console.error("Failed to fetch prices from JSONBin.io. Attempting GitHub fallback:", error);
+            try {
+                const data = await fetchPriceData(fallback_pricesURL, false);
+                
+                pricesData = data;
+                pricesData["result"] = true;
+                console.log("Prices fetched from GitHub fallback successfully.");
+            } catch (fallbackError) {
+                console.error("Failed to fetch prices from both JSONBin.io and GitHub fallback:", fallbackError);
+                pricesData = { "result": false };
+            }
+        })
+        .finally(() => {
+            document.body.querySelectorAll(".price").forEach(elm => {
+                const id = elm.id;
+                if (pricesData["result"] && pricesData.hasOwnProperty(id)) {
+                    elm.textContent = pricesData[id]["price"] + '€';
+                } else {
+                    elm.textContent = "ERR";
+                }
+            });
         });
 
     document.addEventListener('click', function(event) {
