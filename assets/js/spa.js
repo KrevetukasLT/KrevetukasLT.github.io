@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
             filePath = '/raw' + urlPath + '.html';
         }
 
-        fetch(filePath)
+        return fetch(filePath)
             .then(response => {
                 if (response.ok) {
                     return response.text();
@@ -130,12 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (tag) {
             const urlPath = tag.getAttribute('href');
             const target = tag.getAttribute('target');
-
-            // Let the browser handle clicks on:
-            // - Links with target="_blank"
-            // - Absolute URLs (links to other websites)
-            // - Mailto links
-            // - Hash links (unless your SPA specifically handles them, this setup does not)
+            
             if (target === '_blank' ||
                 (urlPath && (urlPath.startsWith('http://') || urlPath.startsWith('https://')) && !urlPath.startsWith(window.location.origin)) ||
                 (urlPath && urlPath.startsWith('mailto:')) ||
@@ -158,33 +153,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Call loadContent with updateHistory = false for popstate events
         window.loadContent(currentPath, false);
     });
-
-    // Initial load:
-    // For the very first load, it's okay to update history if, for example,
-    // the server serves /index.html but you want the URL to show as /.
-    // `loadContent` normalizes this and `updateHistory=true` will clean up the URL.
-    // window.loadContent(window.location.pathname || '/', true);
-
     
     const storedUrl = sessionStorage.getItem('spaRedirectUrl');
     sessionStorage.removeItem('spaRedirectUrl');
 
     if (storedUrl) {
-        //console.log('Redirecting from sessionStorage to:', storedUrl);
         let pathToGo;
         try {
-            // Safely extract just the pathname from the stored (potentially full) URL
             pathToGo = new URL(storedUrl).pathname;
         } catch (e) {
             console.error("Invalid URL in sessionStorage:", storedUrl, e);
             pathToGo = '/'; // Fallback to home
         }
-        window.loadContent(pathToGo, false); // Do not update history, it's already the intended state
+        window.loadContent(pathToGo, false)
+            .then(() => {
+                history.replaceState({ path: pathToGo }, document.title, pathToGo);
+            })
+            .catch(error => {
+                console.error("Error during sessionStorage redirect content load:", error);
+            });
     } else {
-        // Normal initial load based on the current browser path
-        // For the very first load, it's okay to update history if, for example,
-        // the server serves /index.html but you want the URL to show as /.
-        // `loadContent` normalizes this and `updateHistory=true` will clean up the URL.
         window.loadContent(window.location.pathname || '/', true);
     }
 });
