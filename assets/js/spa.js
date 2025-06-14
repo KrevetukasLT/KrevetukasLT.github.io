@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Normalize path and determine filePath
         if (urlPath === '' || urlPath === '/' || urlPath === '/index.html' || urlPath === '/index') {
             urlPath = '/';
-            filePath = '/home.html';
+            filePath = '/raw/home.html';
         } else {
             urlPath = urlPath.startsWith('/') ? urlPath : '/' + urlPath;
-            filePath = urlPath + '.html';
+            filePath = '/raw' + urlPath + '.html';
         }
 
         fetch(filePath)
