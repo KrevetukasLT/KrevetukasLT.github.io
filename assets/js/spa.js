@@ -163,5 +163,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // For the very first load, it's okay to update history if, for example,
     // the server serves /index.html but you want the URL to show as /.
     // `loadContent` normalizes this and `updateHistory=true` will clean up the URL.
-    window.loadContent(window.location.pathname || '/', true);
+    // window.loadContent(window.location.pathname || '/', true);
+
+    
+    const storedUrl = sessionStorage.getItem('spaRedirectUrl');
+    sessionStorage.removeItem('spaRedirectUrl');
+
+    if (storedUrl) {
+        //console.log('Redirecting from sessionStorage to:', storedUrl);
+        let pathToGo;
+        try {
+            // Safely extract just the pathname from the stored (potentially full) URL
+            pathToGo = new URL(storedUrl).pathname;
+        } catch (e) {
+            console.error("Invalid URL in sessionStorage:", storedUrl, e);
+            pathToGo = '/'; // Fallback to home
+        }
+        window.loadContent(pathToGo, false); // Do not update history, it's already the intended state
+    } else {
+        // Normal initial load based on the current browser path
+        // For the very first load, it's okay to update history if, for example,
+        // the server serves /index.html but you want the URL to show as /.
+        // `loadContent` normalizes this and `updateHistory=true` will clean up the URL.
+        window.loadContent(window.location.pathname || '/', true);
+    }
 });

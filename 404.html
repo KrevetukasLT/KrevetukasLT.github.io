@@ -2,10 +2,12 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta propety="article:tag" content="spa-content-page">
         <meta charset="utf-8">
         <title>Redirecting...</title>
         <script type="text/javascript">
-            window.location.replace('/index.html' + window.location.pathname + window.location.search + window.location.hash);
+            sessionStorage.setItem('spaRedirectUrl', location.href);
+            window.location.replace('/');
         </script>
     </head>
     <body>
