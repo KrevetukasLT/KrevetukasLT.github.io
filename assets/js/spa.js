@@ -1,6 +1,6 @@
 const reload = new Event('spa-reload');
 
-const pricesURL = "https://raw.githubusercontent.com/KrevetukasLT/prices/refs/heads/main/main.json?t=" + new Date().getTime()
+const pricesURL = "https://api.jsonbin.io/v3/b/684db7dd8a456b7966ae2a8a?t=" + new Date().getTime()
 let pricesData = {"result": false};
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -88,7 +88,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     fetch(pricesURL, {
-        cache: "no-store"
+        cache: "no-store",
+        headers: {
+            "X-Access-Key": "$2a$10$arXBN1Yi.R4AhW.LPVkvT.wmvyjCDPtQgK3zj.OqpjAfsF5SBndja" // It's read-only
+        }
     })
         .then(response => {
             if (!response.ok)
