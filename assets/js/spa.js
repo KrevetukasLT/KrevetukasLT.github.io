@@ -1,6 +1,6 @@
 const reload = new Event('spa-reload');
 
-const pricesURL = "https://raw.githubusercontent.com/KrevetukasLT/prices/refs/heads/main/main.json"
+const pricesURL = "https://raw.githubusercontent.com/KrevetukasLT/prices/refs/heads/main/main.json?t=" + new Date().getTime()
 let pricesData = {"result": false};
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -42,13 +42,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Page not found');
                 }
 
-                pelm = doc.body.querySelectorAll(".price");
-                pelm.forEach(elm => {
-                    console.log("price exec")
+                doc.body.querySelectorAll(".price").forEach(elm => {
                     if (pricesData["result"]) {
                         const id = elm.id;
                         if (!pricesData.hasOwnProperty(id)) {
-                            elm.textContent = "ERR";
+                            elm.textContent = "X€";
                             return;
                         }
 
@@ -89,7 +87,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    fetch(pricesURL)
+    fetch(pricesURL, {
+        cache: "no-store"
+    })
         .then(response => {
             if (!response.ok)
             {
@@ -99,6 +99,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(pdata => {
                     pricesData = pdata;
                     pricesData["result"] = true;
+
+                    document.body.querySelectorAll(".price").forEach(elm => {
+                        if (pricesData["result"]) {
+                            const id = elm.id;
+                            if (!pricesData.hasOwnProperty(id)) {
+                                elm.textContent = "X€";
+                                return;
+                            }
+
+                            elm.textContent = pricesData[id]["price"] + '€';
+                        }
+                        else {
+                            elm.textContent = "ERR";
+                        }
+                    });
                 });
         })
         .catch(error => {
