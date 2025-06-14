@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch(pricesURL, {
         cache: "no-store",
         headers: {
+            "X-Bin-Meta": false,
             "X-Access-Key": "$2a$10$arXBN1Yi.R4AhW.LPVkvT.wmvyjCDPtQgK3zj.OqpjAfsF5SBndja" // It's read-only
-        }
-    })
+        }})
         .then(response => {
             if (!response.ok)
             {
