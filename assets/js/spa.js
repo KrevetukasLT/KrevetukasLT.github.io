@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Page not found');
                 }
 
-                pelm = document.querySelectorAll(".price");
+                pelm = doc.body.querySelectorAll(".price");
                 pelm.forEach(elm => {
                     console.log("price exec")
                     if (pricesData["result"]) {
