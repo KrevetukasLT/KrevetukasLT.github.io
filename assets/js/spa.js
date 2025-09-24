@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await fetchPriceData();
             priceData = { ...data, result: true };
         } catch (error) {
-            console.error("Failed to fetch prices from primary source. Attempting fallback.", error);
+            console.error("Failed to fetch prices from primary source", error);
             priceData = { result: false };
         } finally {
             updatePricesInDom();
