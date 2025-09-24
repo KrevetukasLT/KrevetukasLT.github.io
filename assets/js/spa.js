@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const C = {
-        API_URL: "https://api.jsonbin.io/v3/b/684db7dd8a456b7966ae2a8a",
-        API_FALLBACK_URL: "https://raw.githubusercontent.com/KrevetukasLT/KrevetukasLT.github.io/refs/heads/main/prices.json",
-        API_KEY: "$2a$10$arXBN1Yi.R4AhW.LPVkvT.wmvyjCDPtQgK3zj.OqpjAfsF5SBndja",
+        API_URL: "https://api.npoint.io/7547aaecf6594fd448b4",
         CONTENT_SELECTOR: '#content',
         PRICE_SELECTOR: '.price',
         SPA_CONTENT_META: 'meta[content="spa-content-page"]',
@@ -13,16 +11,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reloadEvent = new Event(C.RELOAD_EVENT);
     let priceData = { result: false };
 
-    async function fetchPriceData(url, isJsonBin = false) {
+    async function fetchPriceData() {
         const fetchOptions = { cache: "no-store" };
-        if (isJsonBin) {
-            fetchOptions.headers = {
-                "X-Bin-Meta": "false",
-                "X-Access-Key": C.API_KEY
-            };
-        }
 
-        const response = await fetch(url, fetchOptions);
+        const response = await fetch(C.API_URL, fetchOptions);
         if (!response.ok) {
             throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
         }
@@ -46,18 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadPriceData() {
         try {
-            const data = await fetchPriceData(C.API_URL, true);
+            const data = await fetchPriceData();
             priceData = { ...data, result: true };
         } catch (error) {
             console.error("Failed to fetch prices from primary source. Attempting fallback.", error);
-            try {
-                const data = await fetchPriceData(C.API_FALLBACK_URL, false);
-                priceData = { ...data, result: true };
-                console.log("Prices fetched from fallback successfully.");
-            } catch (fallbackError) {
-                console.error("Failed to fetch prices from both primary and fallback sources.", fallbackError);
-                priceData = { result: false };
-            }
+            priceData = { result: false };
         } finally {
             updatePricesInDom();
         }
