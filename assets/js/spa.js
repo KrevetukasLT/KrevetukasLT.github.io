@@ -19,11 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
         }
         
-        const data = await response.json();
-        if (isJsonBin && data.hasOwnProperty("success") && data.success === false) {
-            throw new Error(`JSONBin.io error: ${data.message || 'Unknown error'}`);
-        }
-        return data;
+        return await response.json();
     }
 
     function updatePricesInDom() {
