@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const reloadEvent = new Event(C.RELOAD_EVENT);
+    const formatter = new Intl.NumberFormat('lt-LT', {
+        style: 'currency',
+        currency: 'EUR',
+    });
     let priceData = { result: false };
 
     async function fetchPriceData() {
@@ -25,7 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updatePricesInDom() {
         document.querySelectorAll(C.PRICE_SELECTOR).forEach(elm => {
             if (priceData.result && priceData[elm.id]) {
-                elm.textContent = `${priceData[elm.id].price}€`;
+                if (priceData[elm.id].price == 0) {
+                    elm.textContent = 'NETURIME';
+                } else {
+                    elm.textContent = formatter.format(priceData[elm.id].price);
+                }
             } else {
                 elm.textContent = priceData.result ? "X€" : "ERR";
             }
