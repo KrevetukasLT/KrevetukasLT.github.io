@@ -5,7 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         PRICE_SELECTOR: '.price',
         SPA_CONTENT_META: 'meta[content="spa-content-page"]',
         RELOAD_EVENT: 'spa-reload',
-        SESSION_STORAGE_KEY: 'spaRedirectUrl'
+        SESSION_STORAGE_KEY: 'spaRedirectUrl',
+        BASE_DIR: "/raw"
     };
 
     const reloadEvent = new Event(C.RELOAD_EVENT);
@@ -14,6 +15,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         currency: 'EUR',
     });
     let priceData = { result: false };
+
+    async function fetchHtmlAsDom(path) {
+        const response = await fetch(path);
+        if (!response.ok) {
+            if (response.status === 404) {
+                return null;
+            }
+            throw new Error(`Network response: ${response.status} ${response.statusText}`);
+        }
+        const html = await response.text();
+        return new DOMParser().parseFromString(html, 'text/html');
+    }
 
     async function fetchPriceData() {
         const fetchOptions = { cache: "no-store" };
@@ -29,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updatePricesInDom() {
         document.querySelectorAll(C.PRICE_SELECTOR).forEach(elm => {
             if (priceData.result && priceData[elm.id]) {
-                if (priceData[elm.id].price == 0) {
+                if (!priceData[elm.id].inStock) {
                     elm.textContent = 'NETURIME';
                 } else {
                     elm.textContent = formatter.format(priceData[elm.id].price);
@@ -45,36 +58,77 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await fetchPriceData();
             priceData = { ...data, result: true };
         } catch (error) {
-            console.error("Failed to fetch prices from primary source", error);
+            console.error("Failed to fetch prices", error);
             priceData = { result: false };
         } finally {
             updatePricesInDom();
         }
     }
 
+    function formatPage(contentBody, fills) {
+        contentBody.querySelectorAll('spa-slot').forEach(elm => {
+            const name = elm.getAttribute('name');
+            const fill = name ? fills[name] : undefined;
+
+            const temp = document.createElement('span');
+            if (fill)
+            {
+                temp.innerHTML = fill;
+                elm.replaceWith(...temp.childNodes);
+            }
+            else {
+                temp.innerHTML = elm.innerHTML;
+                elm.replaceWith(...temp.childNodes);
+            }
+        })
+
+        contentBody.querySelectorAll('spa-fill').forEach(elm => {
+            const name = elm.getAttribute('name');
+            if (name) {
+                fills[name] = elm.innerHTML;
+            }
+            elm.remove();
+        });
+    }
+
     async function loadContent(urlPath, updateHistory = true) {
-        const isHome = !urlPath || ['/', '/index.html', '/index'].includes(urlPath);
+        const isHome = !urlPath || ['/', '/index.html', '/index', '/home.html', '/home'].includes(urlPath);
         const finalPath = isHome ? '/' : (urlPath.startsWith('/') ? urlPath : `/${urlPath}`);
-        const filePath = isHome ? '/raw/home.html' : `/raw${finalPath}.html`;
-        
+        const contentFilePath = isHome ? `${C.BASE_DIR}/home.html` : `${C.BASE_DIR}${finalPath}.html`;
+
         try {
-            const response = await fetch(filePath);
-            if (!response.ok) {
-                throw new Error(response.status === 404 ? `Specified file not found: ${filePath}` : `Network response: ${response.status} ${response.statusText}`);
+            const contentDoc = await fetchHtmlAsDom(contentFilePath);
+            if (!contentDoc) {
+                throw new Error(`Specified page not found: ${contentFilePath}`);
             }
-
-            const html = await response.text();
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-
-            if (doc.querySelector(C.SPA_CONTENT_META)) {
-                throw new Error('Recursive page load detected. Page not found.');
+            if (contentDoc.querySelector(C.SPA_CONTENT_META)) {
+                throw new Error('Recursive page load detected. Page not found');
             }
+            
+            let doc = contentDoc.body;
+            let fills = {};
+            formatPage(doc, fills);
+            let currentPath = contentFilePath.substring(0, contentFilePath.lastIndexOf('/'));
 
-            document.title = doc.title || "krevetukas.lt";
-            document.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.body.innerHTML;
+            while (currentPath && currentPath.length >= C.BASE_DIR.length)
+            {
+                const template = await fetchHtmlAsDom(currentPath + '/template.html');
+                if (template) {
+                    formatPage(template.body, fills);
+                    template.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.innerHTML;
+                    doc = template.body;
+                }
 
+                if (currentPath === C.BASE_DIR) {
+                    break;
+                }
+                currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+            }
+            
+            // closing logic
+            document.title = fills["page-title"] || "krevetukas.lt";
+            document.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.innerHTML;
             updatePricesInDom();
-
             if (updateHistory) {
                 history.pushState({ path: finalPath }, document.title, finalPath);
             }

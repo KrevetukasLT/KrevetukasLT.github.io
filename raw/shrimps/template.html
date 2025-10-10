@@ -1,0 +1,48 @@
+<spa-fill name="page-title"> — <spa-slot name="page-title"></spa-slot></spa-fill>
+
+<section>
+    <header class="main">
+        <h1><spa-slot name="page-title"></h1>
+    </header>
+    <span class="image main slideshow" data-wait="5000">
+        <spa-slot name="slideshow"></spa-slot>
+    </span>
+</section>
+
+<section>
+    <h2>Krevetės savybės</h2>
+    <h3>
+        <ul>
+            <li>Lotyniškas pavadinimas: Neocaridina davidi var. <spa-slot name="name"></spa-slot></li>
+            <li>Bendrinis pavadinimas: <spa-slot name="name"></spa-slot> krevetė</li>
+            <li>Išvaizda: <spa-slot name="appearance"></spa-slot></li>
+            <li>Spalvos gradacija: <spa-slot name="color-gradient"></spa-slot></li>
+            <li>Ilgis: <spa-slot name="length"></spa-slot> cm</li>
+            <li>Amžius: <spa-slot name="age"></spa-slot> m.</li>
+            <li>Suderinamumas: <spa-slot name="compatibility"></spa-slot></li>
+            <li>Mityba: <spa-slot name="food"></spa-slot></li>
+            <li>Sudėtingumas: <spa-slot name="difficulty"></spa-slot></li>
+        </ul>
+    </h3>
+</section>
+
+<section>
+    <h2>Reikalavimai ir vandens parametrai</h2>
+    <h3>
+        <ul>
+            <li>Akvariumo reikalavimai: <spa-slot name="aquarium-requirements"></spa-slot></li>
+            <li>Temperatūra: <spa-slot name="temperature"></spa-slot> °C</li>
+            <li>pH: <spa-slot name="ph"></spa-slot> mol/L</li>
+            <li>Bendras kietumas (GH): <spa-slot name="total-hardness"></spa-slot> °dGH</li>
+            <li>Karbonatinis kietumas (KH): <spa-slot name="carbonate-harndess"></spa-slot></li>
+            <li>TDS (ištirpusių kietųjų medžiagų kiekis): <spa-slot name="tds"></spa-slot> ppm</li>
+        </ul>
+    </h3>
+</section>
+
+<section>
+    <h2>Kaina</h2>
+    <h3>Vieneto kaina: <spa-slot name="price"></spa-slot></h3>
+</section>
+
+<div id="content"></div>
