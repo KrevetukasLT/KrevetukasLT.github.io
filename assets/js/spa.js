@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const C = {
-        API_URL: "https://api.npoint.io/7547aaecf6594fd448b4",
         CONTENT_SELECTOR: '#content',
-        PRICE_SELECTOR: '.price',
         SPA_CONTENT_META: 'meta[content="spa-content-page"]',
         RELOAD_EVENT: 'spa-reload',
         SESSION_STORAGE_KEY: 'spaRedirectUrl',
@@ -10,14 +8,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const mainContentDiv = document.querySelector(C.CONTENT_SELECTOR);
-    const scriptsDiv = document.querySelector('#scripts');
-
     const reloadEvent = new Event(C.RELOAD_EVENT);
-    const formatter = new Intl.NumberFormat('lt-LT', {
-        style: 'currency',
-        currency: 'EUR',
-    });
-    let priceData = { result: false };
+    let unmounts = [];
 
     async function fetchHtmlAsDom(path) {
         const response = await fetch(path);
@@ -29,43 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const html = await response.text();
         return new DOMParser().parseFromString(html, 'text/html');
-    }
-
-    async function fetchPriceData() {
-        const fetchOptions = { cache: "no-store" };
-
-        const response = await fetch(C.API_URL, fetchOptions);
-        if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
-    }
-
-    function updatePricesInDom() {
-        document.querySelectorAll(C.PRICE_SELECTOR).forEach(elm => {
-            if (priceData.result && priceData[elm.id]) {
-                if (!priceData[elm.id].inStock) {
-                    elm.textContent = 'NETURIME';
-                } else {
-                    elm.textContent = formatter.format(priceData[elm.id].price);
-                }
-            } else {
-                elm.textContent = priceData.result ? "X€" : "ERR";
-            }
-        });
-    }
-
-    async function loadPriceData() {
-        try {
-            const data = await fetchPriceData();
-            priceData = { ...data, result: true };
-        } catch (error) {
-            console.error("Failed to fetch prices", error);
-            priceData = { result: false };
-        } finally {
-            updatePricesInDom();
-        }
     }
 
     function formatPage(contentBody, fills) {
@@ -125,6 +80,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (typeof module.mount === 'function') {
                         toMount.push(module);
                     }
+                    if (typeof module.unmount === 'function') {
+                        unmounts.push(module);
+                    }
                 }
             } catch (error) {
                 console.error(`Error executing a script from '${path}'`, error);
@@ -138,6 +96,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadContent(urlPath, updateHistory = true) {
         mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
+        for (let module of unmounts) {
+            module.unmount();
+        }
+        unmounts = [];
         
         const isHome = !urlPath || ['/', '/index.html', '/index', '/home.html', '/home'].includes(urlPath);
         const finalPath = isHome ? '/' : (urlPath.startsWith('/') ? urlPath : `/${urlPath}`);
@@ -203,12 +165,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.warn(`Could not find live element for scopeId: ${scope}`);
                 }
             }
-
-            // finalize
-            updatePricesInDom();
-            if (updateHistory) {
-                history.pushState({ path: finalPath }, document.title, finalPath);
-            }
         } catch (error) {
             console.warn(`Error loading content for path "${urlPath}":`, error);
             mainContentDiv.innerHTML = `
@@ -219,8 +175,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </section>`;
         } finally {
+            if (updateHistory) {
+                history.pushState({ path: finalPath }, document.title, finalPath);
+            }
             window.scrollTo({ top: 0, behavior: 'instant' });
             document.body.dispatchEvent(reloadEvent);
+            const mainHeading = mainContentDiv.querySelector('h1');
+            if (mainHeading) {
+                mainHeading.setAttribute('tabindex', '-1');
+                mainHeading.focus();
+            }
         }
     }
 
@@ -247,9 +211,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const path = event.state?.path || '/';
         loadContent(path, false);
     });
-
-    // Initial Load Logic
-    await loadPriceData();
 
     const storedUrl = sessionStorage.getItem(C.SESSION_STORAGE_KEY);
     sessionStorage.removeItem(C.SESSION_STORAGE_KEY);
