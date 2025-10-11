@@ -180,11 +180,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             window.scrollTo({ top: 0, behavior: 'instant' });
             document.body.dispatchEvent(reloadEvent);
-            const mainHeading = mainContentDiv.querySelector('h1');
-            if (mainHeading) {
-                mainHeading.setAttribute('tabindex', '-1');
-                mainHeading.focus();
-            }
         }
     }
 
