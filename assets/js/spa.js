@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         BASE_DIR: "/raw"
     };
 
+    const mainContentDiv = document.querySelector(C.CONTENT_SELECTOR);
+
     const reloadEvent = new Event(C.RELOAD_EVENT);
     const formatter = new Intl.NumberFormat('lt-LT', {
         style: 'currency',
@@ -92,6 +94,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadContent(urlPath, updateHistory = true) {
+        mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
+        
         const isHome = !urlPath || ['/', '/index.html', '/index', '/home.html', '/home'].includes(urlPath);
         const finalPath = isHome ? '/' : (urlPath.startsWith('/') ? urlPath : `/${urlPath}`);
         const contentFilePath = isHome ? `${C.BASE_DIR}/home.html` : `${C.BASE_DIR}${finalPath}.html`;
@@ -127,14 +131,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // closing logic
             document.title = fills["page-title"] || "krevetukas.lt";
-            document.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.innerHTML;
+            mainContentDiv.innerHTML = doc.innerHTML;
             updatePricesInDom();
             if (updateHistory) {
                 history.pushState({ path: finalPath }, document.title, finalPath);
             }
         } catch (error) {
             console.warn(`Error loading content for path "${urlPath}":`, error);
-            document.querySelector(C.CONTENT_SELECTOR).innerHTML = `
+            mainContentDiv.innerHTML = `
                 <section id="banner">
                     <div class="content">
                         <header><h1>Nepavyko užkrauti puslapio</h1></header>
