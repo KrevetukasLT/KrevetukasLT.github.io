@@ -112,11 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             while (currentPath && currentPath.length >= C.BASE_DIR.length)
             {
-                const style = await fetchHtmlAsDom(currentPath + '/style.html');
-                if (style) {
-                    formatPage(style.body, fills);
-                    style.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.innerHTML;
-                    doc = style.body;
+                const layout = await fetchHtmlAsDom(currentPath + '/layout.html');
+                if (layout) {
+                    formatPage(layout.body, fills);
+                    layout.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.innerHTML;
+                    doc = layout.body;
                 }
 
                 if (currentPath === C.BASE_DIR) {
