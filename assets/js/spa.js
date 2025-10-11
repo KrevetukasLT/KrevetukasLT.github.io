@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const mainContentDiv = document.querySelector(C.CONTENT_SELECTOR);
+    const scriptsDiv = document.querySelector('#scripts');
 
     const reloadEvent = new Event(C.RELOAD_EVENT);
     const formatter = new Intl.NumberFormat('lt-LT', {
@@ -93,6 +94,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    async function executeScripts(path, scopeDocument, scopeId) {
+        const scripts = Array.from(scopeDocument.body.querySelectorAll('script'));
+        const toMount = [];
+
+        if (scripts.length === 0) {
+            return toMount;
+        }
+
+        const wrapper = scopeDocument.createElement('div');
+        wrapper.setAttribute('data-scope-id', scopeId);
+        wrapper.append(...scopeDocument.body.childNodes);
+        scopeDocument.body.appendChild(wrapper);
+
+        for (const script of scripts) {
+            try {
+                let module;
+                if (script.src) {
+                    module = await import(new URL(script.src, window.location.href).href);
+                } else if (script.textContent) {
+                    const url = URL.createObjectURL(new Blob([script.textContent], { type: 'text/javascript' }));
+                    module = await import(url);
+                    URL.revokeObjectURL(url);
+                }
+                
+                if (module) {
+                    if (typeof module.init === 'function') {
+                        module.init(scopeDocument); 
+                    }
+                    if (typeof module.mount === 'function') {
+                        toMount.push(module);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error executing a script from '${path}'`, error);
+            }
+        }
+
+        scripts.forEach(s => s.remove());
+
+        return toMount;
+    }
+
     async function loadContent(urlPath, updateHistory = true) {
         mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
         
@@ -109,29 +152,59 @@ document.addEventListener('DOMContentLoaded', async () => {
                 throw new Error('Recursive page load detected. Page not found');
             }
             
-            let doc = contentDoc.body;
+            let doc = contentDoc;
             let fills = {};
-            formatPage(doc, fills);
+            const mounts = new Map();
+            let scopeId = 0;
+
+            const pageScopeId = `scope-${scopeId++}`;
+            let pageMounts = await executeScripts(contentFilePath, doc, pageScopeId);
+            if (pageMounts.length > 0) {
+                mounts.set(pageScopeId, pageMounts);
+            }
+            formatPage(doc.body, fills);
+
             let currentPath = contentFilePath.substring(0, contentFilePath.lastIndexOf('/'));
 
             while (currentPath && currentPath.length >= C.BASE_DIR.length)
             {
-                const layout = await fetchHtmlAsDom(currentPath + '/layout.html');
+                const layoutPath = currentPath + '/layout.html';
+                const layout = await fetchHtmlAsDom(layoutPath);
                 if (layout) {
+                    layout.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.body.innerHTML;
+                    
+                    const layoutScopeId = `scope-${scopeId++}`;
+                    let layoutMounts = await executeScripts(layoutPath, layout, layoutScopeId);
+                    if (layoutMounts.length > 0) {
+                        mounts.set(layoutScopeId, layoutMounts);
+                    }
+
                     formatPage(layout.body, fills);
-                    layout.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.innerHTML;
-                    doc = layout.body;
+                    doc = layout;
                 }
 
-                if (currentPath === C.BASE_DIR) {
-                    break;
-                }
+                if (currentPath === C.BASE_DIR) break;
                 currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
             }
             
             // closing logic
             document.title = fills["page-title"] || "krevetukas.lt";
-            mainContentDiv.innerHTML = doc.innerHTML;
+            mainContentDiv.innerHTML = doc.body.innerHTML;
+
+            // run mounts
+            for (const [scope, modules] of mounts.entries()) {
+                const live = document.querySelector(`[data-scope-id="${scope}"]`)
+                if (live) {
+                    live.removeAttribute('data-scope-id');
+                    for (const module of modules) {
+                        module.mount(live);
+                    }
+                } else {
+                    console.warn(`Could not find live element for scopeId: ${scope}`);
+                }
+            }
+
+            // finalize
             updatePricesInDom();
             if (updateHistory) {
                 history.pushState({ path: finalPath }, document.title, finalPath);

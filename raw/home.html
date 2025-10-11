@@ -19,47 +19,54 @@
     <header class="major">
         <h2>Krevetės</h2>
     </header>
+    
     <div class="posts">
-        <article>
-            <a href="/shrimps/neocaridina/blue_velvet" class="image"><img src="/images/neocaridina/blue_velvet/titulinis.jpg" alt=""/></a>
-            <h3>
-                <span>Neocaridina sp. <b>BLUE VELVET</b></span>
-                <span class="header-status price" id="Neocaridina_sp_BLUE_VELVET">.</span>
-            </h3>
-            <ul class="actions">
-                <li><a href="/shrimps/neocaridina/blue_velvet" class="button">Daugiau</a></li>
-                <li><a href="/uzsisakyti" class="button">Užsisakyti</a></li>
-            </ul>
-        </article>
-        <article>
-            <a href="/shrimps/neocaridina/orange_sunkist" class="image"><img src="/images/neocaridina/orange_sunkist/titulinis.jpg" alt=""/></a>
-            <h3>
-                <span>Neocaridina sp. <b>ORANGE SUNKIST</b></span>
-                <span class="header-status price" id="Neocaridina_sp_ORANGE_SUNKIST">.</span>
-            </h3>
-            <ul class="actions">
-                <li><a href="/shrimps/neocaridina/orange_sunkist" class="button">Daugiau</a></li>
-            </ul>
-        </article>
-        <article>
-            <a href="/shrimps/neocaridina/red_cherry" class="image"><img src="/images/neocaridina/red_cherry/titulinis.jpg" alt=""/></a>
-            <h3>
-                <span>Neocaridina sp. <b>RED CHERRY</b></span>
-                <span class="header-status price" id="Neocaridina_sp_RED_CHERRY">.</span>
-            </h3>
-            <ul class="actions">
-                <li><a href="/shrimps/neocaridina/red_cherry" class="button">Daugiau</a></li>
-            </ul>
-        </article>
-        <article>
-            <a href="/shrimps/neocaridina/yellow_backline" class="image"><img src="/images/neocaridina/yellow_backline/titulinis.jpg" alt=""/></a>
-            <h3>
-                <span>Neocaridina sp. <b>YELLOW BACKLINE</b></span>
-                <span class="header-status price" id="Neocaridina_sp_YELLOW_BACKLINE">.</span>
-            </h3>
-            <ul class="actions">
-                <li><a href="/shrimps/neocaridina/yellow_backline" class="button">Daugiau</a></li>
-            </ul>
-        </article>
+        
     </div>
+
+    <template id="shrimp-template">
+        <article>
+            <a href="#" class="image shrimp-link">
+                <img src="" alt="" class="shrimp-image" />
+            </a>
+            <h3>
+                <span class="shrimp-name"></span>
+                <span class="header-status price shrimp-id">.</span>
+            </h3>
+            <ul class="actions">
+                <li><a href="#" class="button shrimp-link">Daugiau</a></li>
+                <!--<li><a href="/uzsisakyti" class="button">Užsisakyti</a></li>-->
+            </ul>
+        </article>
+    </template>
 </section>
+
+<script>
+    export function init(document) {
+        const shrimp = [
+            "blue velvet",
+            "orange sunkist",
+            "red cherry",
+            "yellow backline"
+        ];
+
+        const template = document.querySelector('#shrimp-template');
+        const container = document.querySelector('.posts');
+        const commonPrefix = "Neocaridina sp.";
+
+        shrimp.forEach(variety => {
+            const clone = template.content.cloneNode(true);
+
+            const path = variety.replace(/ /g, '_');
+            const fullName = `${commonPrefix} ${variety.toUpperCase()}`;
+
+            clone.querySelectorAll('.shrimp-link').forEach(link => link.href = `/shrimps/neocaridina/${path}`);
+            clone.querySelector('.shrimp-image').src = `/images/neocaridina/${path}/titulinis.jpg`;
+            clone.querySelector('.shrimp-image').alt = fullName.replace(/<[^>]*>?/gm, '');
+            clone.querySelector('.shrimp-name').innerHTML = fullName;
+            clone.querySelector('.shrimp-id').id = fullName.replace(/\. /g, '_').replace(/ /g, '_');
+
+            container.appendChild(clone);
+        });
+    }
+</script>
