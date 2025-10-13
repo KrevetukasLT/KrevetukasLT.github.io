@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll(PRICE_SELECTOR).forEach(elm => {
             if (priceData.result && priceData[elm.id]) {
                 if (!priceData[elm.id].inStock) {
-                    elm.textContent = 'NETURIME';
+                    elm.textContent = 'IŠPARDUOTA';
                 } else {
                     elm.textContent = formatter.format(priceData[elm.id].price);
                 }
