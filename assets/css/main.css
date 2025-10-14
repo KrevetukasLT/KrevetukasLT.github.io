@@ -2356,6 +2356,18 @@ button:disabled,
   right: 0;
   width: calc(100% + 6em);
 }
+.posts article h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.posts article h3 .header-status {
+  margin-left: 1em;
+  white-space: nowrap;
+  font-size: 0.8em;
+  font-weight: 600;
+  color: #555555;
+}
 .posts article > :last-child {
   margin-bottom: 0;
 }
