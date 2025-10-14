@@ -1,4 +1,5 @@
-<spa-fill name="page-title">Neocaridina sp. <spa-slot name="page-title"></spa-slot></spa-fill>
+<spa-fill name="page-title" id="title"></spa-fill>
+<spa-fill name="slideshow" id="slideshow"></spa-fill>
 
 <spa-fill name="length">3</spa-fill>
 <spa-fill name="age">iki 2</spa-fill>
@@ -13,4 +14,24 @@
 <spa-fill name="carbonate-harndess">3 - 10</spa-fill>
 <spa-fill name="tds">150 - 300</spa-fill>
 
+<spa-fill name="price" id="priceFill"></spa-fill>
+
 <div id="content"></div>
+
+<script>
+export function init(doc, fills) {
+    const upperName = fills['name'].toUpperCase();
+    doc.getElementById("title").innerHTML = `Neocaridina sp. ${upperName}`;
+    doc.getElementById("priceFill").innerHTML = `<span class="price" id="Neocaridina_sp_${upperName.replace(/ /g, '_')}">.</span>`;
+
+    const slideshow = doc.getElementById("slideshow");
+    const slideCount = parseInt(fills['numSlides'], 10);
+    const folderName = fills['name'].toLowerCase().replace(/ /g, '_');
+
+    for (let i = 1; i <= slideCount; i++) {
+        const img = doc.createElement('img');
+        img.src = `/images/neocaridina/${folderName}/slideshow/${i}.jpg`;
+        slideshow.appendChild(img);
+    }
+}
+</script>

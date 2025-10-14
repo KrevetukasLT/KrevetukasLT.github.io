@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    async function executeScripts(path, scopeDocument, scopeId) {
+    async function executeScripts(path, scopeDocument, scopeId, fills) {
         const scripts = Array.from(scopeDocument.body.querySelectorAll('script'));
         const toMount = [];
 
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (module) {
                     if (typeof module.init === 'function') {
-                        module.init(scopeDocument); 
+                        module.init(scopeDocument, fills); 
                     }
                     if (typeof module.mount === 'function') {
                         toMount.push(module);
@@ -95,10 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadContent(urlPath, updateHistory = true) {
-        mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
         for (let module of unmounts) {
             module.unmount();
         }
+        mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
         unmounts = [];
         
         const isHome = !urlPath || ['/', '/index.html', '/index', '/home.html', '/home'].includes(urlPath);
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let scopeId = 0;
 
             const pageScopeId = `scope-${scopeId++}`;
-            let pageMounts = await executeScripts(contentFilePath, doc, pageScopeId);
+            let pageMounts = await executeScripts(contentFilePath, doc, pageScopeId, fills);
             if (pageMounts.length > 0) {
                 mounts.set(pageScopeId, pageMounts);
             }
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     layout.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.body.innerHTML;
                     
                     const layoutScopeId = `scope-${scopeId++}`;
-                    let layoutMounts = await executeScripts(layoutPath, layout, layoutScopeId);
+                    let layoutMounts = await executeScripts(layoutPath, layout, layoutScopeId, fills);
                     if (layoutMounts.length > 0) {
                         mounts.set(layoutScopeId, layoutMounts);
                     }
