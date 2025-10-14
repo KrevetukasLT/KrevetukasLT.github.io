@@ -1,0 +1,43 @@
+///
+/// Krevetukas.lt
+///
+
+/* Slideshow */
+
+	.slideshow {
+		position: relative;
+
+		// Navigation buttons
+		a {
+			position: absolute;
+			top: 50%;
+			background-color: rgba(222, 225, 226, 0.75);
+			border-radius: _size(border-radius);
+			padding: 0.5em;
+			@include vendor('transform', 'translateY(-50%)');
+
+			// Assumes the <a> tag itself has the class, e.g., <a class="button-left">
+			&.button-left {
+				left: 1%;
+			}
+
+			&.button-right {
+				right: 1%;
+			}
+		}
+
+		// Slides
+		img {
+			position: absolute;
+			top: 0;
+			left: 0;
+			opacity: 0;
+			@include vendor('transition', 'opacity 1s ease-in-out');
+
+			// Active slide
+			&.active {
+				position: relative;
+				opacity: 1;
+			}
+		}
+	}

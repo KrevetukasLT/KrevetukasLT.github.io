@@ -1,0 +1,14 @@
+///
+/// Krevetukas.lt
+///
+
+/* Loader */
+
+	.loader {
+		border: 16px solid _palette(border-bg); // Using a variable for the light grey
+		border-top: 16px solid _palette(accent); // Using the theme's accent color
+		border-radius: 50%;
+		width: 120px;
+		height: 120px;
+		@include vendor('animation', 'spin 2s linear infinite');
+	}
