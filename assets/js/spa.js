@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         wrapper.append(...scopeDocument.body.childNodes);
         scopeDocument.body.appendChild(wrapper);
 
+        const promises = [];
         for (const script of scripts) {
             try {
                 let module;
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (module) {
                     if (typeof module.init === 'function') {
-                        module.init(scopeDocument, fills); 
+                        promises.push(module.init(scopeDocument, fills)); 
                     }
                     if (typeof module.mount === 'function') {
                         toMount.push(module);
@@ -88,6 +89,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error(`Error executing a script from '${path}'`, error);
             }
         }
+
+        await Promise.all(promises);
 
         scripts.forEach(s => s.remove());
 
