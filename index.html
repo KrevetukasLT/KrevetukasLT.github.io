@@ -57,10 +57,9 @@
                             <li>
                                 <span class="opener">Krevetės</span>
                                 <ul>
-                                    <li><a href="/shrimps/neocaridina/blue_velvet">Neocaridina sp. BLUE VELVET</a></li>
-                                    <li><a href="/shrimps/neocaridina/orange_sunkist">Neocaridina sp. ORANGE SUNKIST</a></li>
-                                    <li><a href="/shrimps/neocaridina/red_cherry">Neocaridina sp. RED CHERRY</a></li>
-                                    <li><a href="/shrimps/neocaridina/yellow_backline">Neocaridina sp. YELLOW BACKLINE</a></li>
+                                    <template id="shrimp-template">
+                                        <li><a></a></li>
+                                    </template>
                                 </ul>
                             </li>
                         </ul>
@@ -85,13 +84,42 @@
             </div>
         </div>
 
-		<!-- Scripts -->
-		<script src="/assets/js/breakpoints.min.js"></script>
-		<script src="/assets/js/browser.min.js"></script>
+        <!-- Scripts -->
+        <script src="/assets/js/breakpoints.min.js"></script>
+        <script src="/assets/js/browser.min.js"></script>
         <script src="/assets/js/elements.js"></script>
-		<script src="/assets/js/jquery.min.js"></script>
-		<script src="/assets/js/main.js"></script>
-		<script src="/assets/js/spa.js"></script>
-		<script src="/assets/js/util.js"></script>
+        <script src="/assets/js/jquery.min.js"></script>
+        <script src="/assets/js/main.js"></script>
+        <script src="/assets/js/spa.js"></script>
+        <script src="/assets/js/util.js"></script>
+
+        <!-- Init sidebar -->
+        <script>
+            (async () => {
+                try {
+                    const response = await fetch('/data/shrimps.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const template = document.querySelector('#sidebar #shrimp-template');
+                    const container = template.parentElement;
+                    const commonPrefix = "Neocaridina sp.";
+
+                    (await response.json()).neocaridina.forEach(variety => {
+                        const clone = template.content.cloneNode(true);
+                        const link = clone.querySelector('a');
+
+                        link.href = `/shrimps/neocaridina/${variety.replace(/ /g, '_')}`;
+                        link.textContent = `${commonPrefix} ${variety.toUpperCase()}`;
+
+                        container.insertBefore(clone, template);
+                    });
+
+                } catch (error) {
+                    console.error('Error auto-loading sidebar:', error);
+                }
+            })();
+        </script>
 	</body>
 </html>

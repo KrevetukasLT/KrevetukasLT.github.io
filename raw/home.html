@@ -42,31 +42,33 @@
 </section>
 
 <script>
-    export function init(document) {
-        const shrimp = [
-            "blue velvet",
-            "orange sunkist",
-            "red cherry",
-            "yellow backline"
-        ];
+    export async function init(document) {
+        try {
+            const response = await fetch('/data/shrimps.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const shrimp = (await response.json()).neocaridina;
 
-        const template = document.querySelector('#shrimp-template');
-        const container = document.querySelector('.posts');
-        const commonPrefix = "Neocaridina sp.";
+            const template = document.querySelector('#shrimp-template');
+            const container = document.querySelector('.posts');
+            const commonPrefix = "Neocaridina sp.";
 
-        shrimp.forEach(variety => {
-            const clone = template.content.cloneNode(true);
+            shrimp.forEach(variety => {
+                const clone = template.content.cloneNode(true);
+                const path = variety.replace(/ /g, '_');
+                const fullName = `${commonPrefix} ${variety.toUpperCase()}`;
 
-            const path = variety.replace(/ /g, '_');
-            const fullName = `${commonPrefix} ${variety.toUpperCase()}`;
-
-            clone.querySelectorAll('.shrimp-link').forEach(link => link.href = `/shrimps/neocaridina/${path}`);
-            clone.querySelector('.shrimp-image').src = `/images/neocaridina/${path}/titulinis.jpg`;
-            clone.querySelector('.shrimp-image').alt = fullName.replace(/<[^>]*>?/gm, '');
-            clone.querySelector('.shrimp-name').innerHTML = fullName;
-            clone.querySelector('.shrimp-id').id = fullName.replace(/\. /g, '_').replace(/ /g, '_');
-
-            container.appendChild(clone);
-        });
+                clone.querySelectorAll('.shrimp-link').forEach(link => link.href = `/shrimps/neocaridina/${path}`);
+                clone.querySelector('.shrimp-image').src = `/images/neocaridina/${path}/titulinis.jpg`;
+                clone.querySelector('.shrimp-image').alt = fullName.replace(/<[^>]*>?/gm, '');
+                clone.querySelector('.shrimp-name').innerHTML = fullName;
+                clone.querySelector('.shrimp-id').id = fullName.replace(/\. /g, '_').replace(/ /g, '_');
+                
+                container.appendChild(clone);
+            });
+        } catch (error) {
+            console.error('Error fetching or parsing shrimp data:', error);
+        }
     }
 </script>
