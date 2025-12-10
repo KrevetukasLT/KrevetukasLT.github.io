@@ -1,4 +1,3 @@
-      
 <!DOCTYPE html>
 <html>
     <head>
@@ -6,8 +5,8 @@
         <meta charset="utf-8">
         <title>Redirecting...</title>
         <script type="text/javascript">
-            sessionStorage.setItem('spaRedirectUrl', location.href);
-            window.location.replace('/');
+            const redirectPath = location.pathname + location.search + location.hash;
+            window.location.replace('/?spa_redirect=' + encodeURIComponent(redirectPath));
         </script>
         
         <!-- Embed -->
@@ -23,5 +22,3 @@
         <p>If you are not redirected automatically, follow this <a href="/">link</a>.</p>
     </body>
 </html>
-
-    

@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         CONTENT_SELECTOR: '#content',
         SPA_CONTENT_META: 'meta[content="spa-content-page"]',
         RELOAD_EVENT: 'spa-reload',
-        SESSION_STORAGE_KEY: 'spaRedirectUrl',
+        REDIRECT_PARAM: 'spa_redirect',
         BASE_DIR: "/raw"
     };
 
@@ -210,24 +210,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadContent(path, false);
     });
 
-    const storedUrl = sessionStorage.getItem(C.SESSION_STORAGE_KEY);
-    sessionStorage.removeItem(C.SESSION_STORAGE_KEY);
+    const redirectPath = (new URLSearchParams(window.location.search)).get(C.REDIRECT_PARAM);
 
     let initialPath = window.location.pathname || '/';
     let shouldUpdateHistory = true;
 
-    if (storedUrl) {
-        try {
-            initialPath = new URL(storedUrl).pathname;
-            shouldUpdateHistory = false; // The state should be replaced, not pushed.
-        } catch (e) {
-            console.error("Invalid URL in sessionStorage:", storedUrl, e);
-        }
+    if (redirectPath) {
+        initialPath = redirectPath;
+        shouldUpdateHistory = false;
     }
 
     await loadContent(initialPath, shouldUpdateHistory);
-    // Ensure history state is correct after a redirect-based load.
-    if (storedUrl) {
+    
+    if (redirectPath) {
         history.replaceState({ path: initialPath }, document.title, initialPath);
     }
 });
