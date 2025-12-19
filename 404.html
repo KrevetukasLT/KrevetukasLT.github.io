@@ -5,8 +5,7 @@
         <meta charset="utf-8">
         <title>Redirecting...</title>
         <script type="text/javascript">
-            const redirectPath = location.pathname + location.search + location.hash;
-            window.location.replace('/?spa_redirect=' + encodeURIComponent(redirectPath));
+            window.location.replace('/#' + location.pathname + location.search + location.hash);
         </script>
         
         <!-- Embed -->

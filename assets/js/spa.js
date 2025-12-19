@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         CONTENT_SELECTOR: '#content',
         SPA_CONTENT_META: 'meta[content="spa-content-page"]',
         RELOAD_EVENT: 'spa-reload',
-        REDIRECT_PARAM: 'spa_redirect',
         BASE_DIR: "/raw"
     };
 
@@ -178,9 +177,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </section>`;
         } finally {
-            if (updateHistory) {
-                history.pushState({ path: finalPath }, document.title, finalPath);
-            }
             window.scrollTo({ top: 0, behavior: 'instant' });
             document.body.dispatchEvent(reloadEvent);
         }
@@ -195,34 +191,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isExternal = window.location.origin !== url.origin;
         const isSpecialLink = url.protocol === 'mailto:' || anchor.target === '_blank' || url.pathname.startsWith('#');
 
-        if (isExternal || isSpecialLink) {
-            return; // Let the browser handle it.
-        }
+        if (isExternal || isSpecialLink) return;
 
-        event.preventDefault(); // Let the SPA.js handle it.
-        if (url.pathname !== window.location.pathname) {
-            loadContent(url.pathname, true);
-        }
+        event.preventDefault();
+        if (window.location.hash !== `#${url.pathname}`) window.location.hash = url.pathname;
     });
 
-    window.addEventListener('popstate', event => {
-        const path = event.state?.path || '/';
-        loadContent(path, false);
-    });
-
-    const redirectPath = (new URLSearchParams(window.location.search)).get(C.REDIRECT_PARAM);
-
-    let initialPath = window.location.pathname || '/';
-    let shouldUpdateHistory = true;
-
-    if (redirectPath) {
-        initialPath = redirectPath;
-        shouldUpdateHistory = false;
+    function getPathFromHash() {
+        const hash = window.location.hash;
+        return hash.startsWith('#/') ? hash.substring(1) : '/';
     }
 
-    await loadContent(initialPath, shouldUpdateHistory);
-    
-    if (redirectPath) {
-        history.replaceState({ path: initialPath }, document.title, initialPath);
-    }
+    window.addEventListener('hashchange', () => { loadContent(getPathFromHash(), false); });
+
+    await loadContent(getPathFromHash(), false);
 });
