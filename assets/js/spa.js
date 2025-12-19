@@ -48,13 +48,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    async function executeScripts(path, scopeDocument, scopeId, fills) {
+    async function executeScripts(path, scopeDocument, scopeId, fills, targetUnmounts) {
         const scripts = Array.from(scopeDocument.body.querySelectorAll('script'));
         const toMount = [];
 
-        if (scripts.length === 0) {
-            return toMount;
-        }
+        if (scripts.length === 0) return toMount;
 
         const wrapper = scopeDocument.createElement('div');
         wrapper.setAttribute('data-scope-id', scopeId);
@@ -81,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         toMount.push(module);
                     }
                     if (typeof module.unmount === 'function') {
-                        unmounts.push(module);
+                        targetUnmounts.push(module);
                     }
                 }
             } catch (error) {
@@ -96,13 +94,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return toMount;
     }
 
-    async function loadContent(urlPath, updateHistory = true) {
-        for (let module of unmounts) {
-            module.unmount();
-        }
-        mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
-        unmounts = [];
+    async function loadContent(urlPath) {
+        let loaderShown = false;
+        const loaderTimer = setTimeout(() => {
+            loaderShown = true;
+            for (let module of unmounts) module.unmount();
+            unmounts = [];
+            mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
+        }, 100);
         
+        let newUnmounts = [];
+
         const isHome = !urlPath || ['/', '/index.html', '/index', '/home.html', '/home'].includes(urlPath);
         const finalPath = isHome ? '/' : (urlPath.startsWith('/') ? urlPath : `/${urlPath}`);
         const contentFilePath = isHome ? `${C.BASE_DIR}/home.html` : `${C.BASE_DIR}${finalPath}.html`;
@@ -122,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let scopeId = 0;
 
             const pageScopeId = `scope-${scopeId++}`;
-            let pageMounts = await executeScripts(contentFilePath, doc, pageScopeId, fills);
+            let pageMounts = await executeScripts(contentFilePath, doc, pageScopeId, fills, newUnmounts);
             if (pageMounts.length > 0) {
                 mounts.set(pageScopeId, pageMounts);
             }
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     layout.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.body.innerHTML;
                     
                     const layoutScopeId = `scope-${scopeId++}`;
-                    let layoutMounts = await executeScripts(layoutPath, layout, layoutScopeId, fills);
+                    let layoutMounts = await executeScripts(layoutPath, layout, layoutScopeId, fills, newUnmounts);
                     if (layoutMounts.length > 0) {
                         mounts.set(layoutScopeId, layoutMounts);
                     }
@@ -150,8 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (currentPath === C.BASE_DIR) break;
                 currentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
             }
-            
+
             // closing logic
+            clearTimeout(loaderTimer);
+            if (!loaderShown) for (let module of unmounts) module.unmount();
+            
+            unmounts = newUnmounts;
+
+            // load new page
             document.title = fills["page-title"] || "krevetukas.lt";
             mainContentDiv.innerHTML = doc.body.innerHTML;
 
@@ -202,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return hash.startsWith('#/') ? hash.substring(1) : '/';
     }
 
-    window.addEventListener('hashchange', () => { loadContent(getPathFromHash(), false); });
+    window.addEventListener('hashchange', () => { loadContent(getPathFromHash()); });
 
-    await loadContent(getPathFromHash(), false);
+    await loadContent(getPathFromHash());
 });
