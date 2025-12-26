@@ -240,8 +240,8 @@
             var slides = $(this).find('img');
             var wait = parseInt($(this).attr('data-wait'));
 
-            var prev = $('<a href="#prev" class="icon solid fa-chevron-left button-left"></a>');
-            var next = $('<a href="#next" class="icon solid fa-chevron-right button-right"></a>');
+            var prev = $('<a href="javascript:void(0);" class="icon solid fa-chevron-left button-left"></a>');
+            var next = $('<a href="javascript:void(0);" class="icon solid fa-chevron-right button-right"></a>');
 
             prev.appendTo(this);
             next.appendTo(this);
