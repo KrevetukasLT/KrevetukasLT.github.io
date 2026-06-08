@@ -5,13 +5,14 @@
             <h1>Krevetukas.lt akvariuminės krevetės</h1>
             <p>jūsų ekspertai krevečių pasaulyje</p>
         </header>
-        <p>Atraskite mėgstamiausias akvariuminių krevečių rūšis ir sukurkite įspūdingą povandeninį pasaulį Savo namuose!</p>
+        <p>Atraskite mėgstamiausias akvariuminių krevečių rūšis ir sukurkite įspūdingą povandeninį pasaulį Savo namuose!
+        </p>
     </div>
     <span class="image slideshow" data-wait="4000">
-        <img src="/images/neocaridina/blue_velvet/slideshow_titulinis/1.gif" alt=""/>
-        <img src="/images/neocaridina/orange_sunkist/slideshow_titulinis/1.gif" alt=""/>
-        <img src="/images/neocaridina/red_cherry/slideshow_titulinis/1.gif" alt=""/>
-        <img src="/images/neocaridina/yellow_backline/slideshow_titulinis/1.gif" alt=""/>
+        <img src="/images/neocaridina/blue_velvet/slideshow_titulinis/1.gif" alt="" />
+        <img src="/images/neocaridina/orange_sunkist/slideshow_titulinis/1.gif" alt="" />
+        <img src="/images/neocaridina/red_cherry/slideshow_titulinis/1.gif" alt="" />
+        <img src="/images/neocaridina/yellow_backline/slideshow_titulinis/1.gif" alt="" />
     </span>
 </section>
 
@@ -19,9 +20,9 @@
     <header class="major">
         <h2>Krevetės</h2>
     </header>
-    
+
     <div class="posts">
-        
+
     </div>
 
     <template id="shrimp-template">
@@ -64,7 +65,7 @@
                 clone.querySelector('.shrimp-image').alt = fullName.replace(/<[^>]*>?/gm, '');
                 clone.querySelector('.shrimp-name').innerHTML = fullName;
                 clone.querySelector('.shrimp-id').id = fullName.replace(/\. /g, '_').replace(/ /g, '_');
-                
+
                 container.appendChild(clone);
             });
         } catch (error) {

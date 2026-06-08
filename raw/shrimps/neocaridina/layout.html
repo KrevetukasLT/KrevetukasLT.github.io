@@ -3,11 +3,15 @@
 
 <spa-fill name="length">3</spa-fill>
 <spa-fill name="age">iki 2</spa-fill>
-<spa-fill name="compatibility">Gali būti laikomos kartu su bet kuriomis pasyviomis gėlavandenėmis krevetėmis ar mažomis žuvimis (jei vandens parametrai sutampa). Gali kryžmintis su kitomis Neocaridina rūšimis, todėl spalva gali susilpnėti. Nesikryžmina su Caridina genties krevetėmis</spa-fill>
-<spa-fill name="food">Visaėdės — minta dumbliais, specialiu krevečių maistu. Galima duoti virtų daržovių (pvz., špinatų, cukinijos). Venkite maisto, kuriame yra vario</spa-fill>
+<spa-fill name="compatibility">Gali būti laikomos kartu su bet kuriomis pasyviomis gėlavandenėmis krevetėmis ar mažomis
+    žuvimis (jei vandens parametrai sutampa). Gali kryžmintis su kitomis Neocaridina rūšimis, todėl spalva gali
+    susilpnėti. Nesikryžmina su Caridina genties krevetėmis</spa-fill>
+<spa-fill name="food">Visaėdės — minta dumbliais, specialiu krevečių maistu. Galima duoti virtų daržovių (pvz., špinatų,
+    cukinijos). Venkite maisto, kuriame yra vario</spa-fill>
 <spa-fill name="difficulty">Tinka pradedantiesiems</spa-fill>
 
-<spa-fill name="aquarium-requirements">Rekomenduojamas bent 25 litrų akvariumas, geriausia laikyti grupėje nuo 10 individų, kad jaustųsi saugiai.</spa-fill>
+<spa-fill name="aquarium-requirements">Rekomenduojamas bent 25 litrų akvariumas, geriausia laikyti grupėje nuo 10
+    individų, kad jaustųsi saugiai.</spa-fill>
 <spa-fill name="temperature">20 - 26</spa-fill>
 <spa-fill name="ph">6.5 - 8.0</spa-fill>
 <spa-fill name="total-hardness">4 - 12</spa-fill>
@@ -19,19 +23,19 @@
 <div id="content"></div>
 
 <script>
-export function init(doc, fills) {
-    const upperName = fills['name'].toUpperCase();
-    doc.getElementById("title").innerHTML = `Neocaridina sp. ${upperName}`;
-    doc.getElementById("priceFill").innerHTML = `<span class="price" id="Neocaridina_sp_${upperName.replace(/ /g, '_')}">.</span>`;
+    export function init(doc, fills) {
+        const upperName = fills['name'].toUpperCase();
+        doc.getElementById("title").innerHTML = `Neocaridina sp. ${upperName}`;
+        doc.getElementById("priceFill").innerHTML = `<span class="price" id="Neocaridina_sp_${upperName.replace(/ /g, '_')}">.</span>`;
 
-    const slideshow = doc.getElementById("slideshow");
-    const slideCount = parseInt(fills['numSlides'], 10);
-    const folderName = fills['name'].toLowerCase().replace(/ /g, '_');
+        const slideshow = doc.getElementById("slideshow");
+        const slideCount = parseInt(fills['numSlides'], 10);
+        const folderName = fills['name'].toLowerCase().replace(/ /g, '_');
 
-    for (let i = 1; i <= slideCount; i++) {
-        const img = doc.createElement('img');
-        img.src = `/images/neocaridina/${folderName}/slideshow/${i}.jpg`;
-        slideshow.appendChild(img);
+        for (let i = 1; i <= slideCount; i++) {
+            const img = doc.createElement('img');
+            img.src = `/images/neocaridina/${folderName}/slideshow/${i}.jpg`;
+            slideshow.appendChild(img);
+        }
     }
-}
 </script>
