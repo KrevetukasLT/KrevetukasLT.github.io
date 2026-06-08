@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         CONTENT_SELECTOR: '#content',
         SPA_CONTENT_META: 'meta[content="spa-content-page"]',
         RELOAD_EVENT: 'spa-reload',
+        REDIRECT_PARAM: 'spa_redirect',
         BASE_DIR: "/raw"
     };
 
@@ -28,8 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const fill = name ? fills[name] : undefined;
 
             const temp = document.createElement('span');
-            if (fill)
-            {
+            if (fill) {
                 temp.innerHTML = fill;
                 elm.replaceWith(...temp.childNodes);
             }
@@ -70,10 +70,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     module = await import(url);
                     URL.revokeObjectURL(url);
                 }
-                
+
                 if (module) {
                     if (typeof module.init === 'function') {
-                        promises.push(module.init(scopeDocument, fills)); 
+                        promises.push(module.init(scopeDocument, fills));
                     }
                     if (typeof module.mount === 'function') {
                         toMount.push(module);
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return toMount;
     }
 
-    async function loadContent(urlPath) {
+    async function loadContent(urlPath, updateHistory = true) {
         let loaderShown = false;
         const loaderTimer = setTimeout(() => {
             loaderShown = true;
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             unmounts = [];
             mainContentDiv.innerHTML = '<br/><div class="loader"></div>';
         }, 100);
-        
+
         let newUnmounts = [];
 
         const isHome = !urlPath || ['/', '/index.html', '/index', '/home.html', '/home'].includes(urlPath);
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (contentDoc.querySelector(C.SPA_CONTENT_META)) {
                 throw new Error('Recursive page load detected. Page not found');
             }
-            
+
             let doc = contentDoc;
             let fills = {};
             const mounts = new Map();
@@ -132,13 +132,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let currentPath = contentFilePath.substring(0, contentFilePath.lastIndexOf('/'));
 
-            while (currentPath && currentPath.length >= C.BASE_DIR.length)
-            {
+            while (currentPath && currentPath.length >= C.BASE_DIR.length) {
                 const layoutPath = currentPath + '/layout.html';
                 const layout = await fetchHtmlAsDom(layoutPath);
                 if (layout) {
                     layout.querySelector(C.CONTENT_SELECTOR).innerHTML = doc.body.innerHTML;
-                    
+
                     const layoutScopeId = `scope-${scopeId++}`;
                     let layoutMounts = await executeScripts(layoutPath, layout, layoutScopeId, fills, newUnmounts);
                     if (layoutMounts.length > 0) {
@@ -156,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // closing logic
             clearTimeout(loaderTimer);
             if (!loaderShown) for (let module of unmounts) module.unmount();
-            
+
             unmounts = newUnmounts;
 
             // load new page
@@ -185,6 +184,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </section>`;
         } finally {
+            if (updateHistory) {
+                history.pushState({ path: finalPath }, document.title, finalPath);
+            }
             window.scrollTo({ top: 0, behavior: 'instant' });
             document.body.dispatchEvent(reloadEvent);
         }
@@ -202,15 +204,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (isExternal || isSpecialLink) return;
 
         event.preventDefault();
-        if (window.location.hash !== `#${url.pathname}`) window.location.hash = url.pathname;
+        if (url.pathname !== window.location.pathname) {
+            loadContent(url.pathname, true);
+        }
+
+        window.addEventListener('popstate', event => {
+            const path = event.state?.path || '/';
+            loadContent(path, false);
+        });
     });
 
-    function getPathFromHash() {
-        const hash = window.location.hash;
-        return hash.startsWith('#/') ? hash.substring(1) : '/';
+    const redirectPath = (new URLSearchParams(window.location.search)).get(C.REDIRECT_PARAM);
+
+    let initialPath = window.location.pathname || '/';
+    let shouldUpdateHistory = true;
+
+    if (redirectPath) {
+        initialPath = redirectPath;
+        shouldUpdateHistory = false;
+        history.replaceState({ path: initialPath }, document.title, initialPath);
     }
 
-    window.addEventListener('hashchange', () => { loadContent(getPathFromHash()); });
-
-    await loadContent(getPathFromHash());
+    await loadContent(initialPath, shouldUpdateHistory);
 });
