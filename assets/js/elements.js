@@ -21,14 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePricesInDom() {
         document.querySelectorAll(PRICE_SELECTOR).forEach(elm => {
+            const buttons = document.querySelectorAll(`.add-to-cart[data-id="${elm.id}"]`);
             if (priceData.result && priceData[elm.id]) {
                 if (!priceData[elm.id].inStock) {
                     elm.textContent = 'IŠPARDUOTA';
+                    buttons.forEach(btn => btn.disabled = true);
                 } else {
                     elm.textContent = formatter.format(priceData[elm.id].price);
+                    elm.dataset.price = priceData[elm.id].price;
+                    buttons.forEach(btn => btn.disabled = false);
                 }
             } else {
                 elm.textContent = priceData.result ? "X€" : "ERR";
+                buttons.forEach(btn => btn.disabled = true);
             }
         });
     }
@@ -44,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updatePricesInDom();
         }
     }
-    
+
     document.body.addEventListener(RELOAD_EVENT, updatePricesInDom);
-    
+
     loadPriceData();
 });

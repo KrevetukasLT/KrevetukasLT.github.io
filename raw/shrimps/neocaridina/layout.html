@@ -19,14 +19,19 @@
 <spa-fill name="tds">150 - 300</spa-fill>
 
 <spa-fill name="price" id="priceFill"></spa-fill>
+<spa-fill name="add-to-cart" id="cartFill"></spa-fill>
 
 <div id="content"></div>
 
 <script>
     export function init(doc, fills) {
         const upperName = fills['name'].toUpperCase();
-        doc.getElementById("title").innerHTML = `Neocaridina sp. ${upperName}`;
+        const elementId = `Neocaridina_sp_${upperName.replace(/ /g, '_')}`;
+        const fullName = `Neocaridina sp. ${upperName}`;
+
+        doc.getElementById("title").innerHTML = fullName;
         doc.getElementById("priceFill").innerHTML = `<span class="price" id="Neocaridina_sp_${upperName.replace(/ /g, '_')}">.</span>`;
+        doc.getElementById("cartFill").innerHTML = `<button class="button primary add-to-cart" data-id="${elementId}" data-name="${fullName}" disabled>Į krepšelį</button>`;
 
         const slideshow = doc.getElementById("slideshow");
         const slideCount = parseInt(fills['numSlides'], 10);

@@ -1,29 +1,199 @@
-<spa-fill name="page-title"> — Užsisakyti</spa-fill>
+<spa-fill name="page-title"> — Krepšelis</spa-fill>
 
 <section>
     <header class="main">
-        <h1>Kaip užsisakyti</h1>
+        <h1>Krepšelis</h1>
     </header>
+    <div id="cart-container">
+    </div>
 
-    <h2>
-        Šiuo metu užsakymus priimame tik telefonu.
-    </h2>
-    <h2>
-        Susisiekite su mumis — mielai atsakysime į klausimus, patvirtinsime prekių prieinamumą ir priimsime jūsų
-        užsakymą.
-        <br />
-        Užsakymai telefonu: +370 623 65552
-        <br />
-        Pirkinius galite atsiimti asmeniškai sutartu laiku (darbo dienomis nuo 16:00 iki 22:00, išeiginėmis dienomis nuo
-        9:00 iki 22:00)
-        <br />
-        Galimas siuntimas į DPD paštomatą už papildomą 3,50 € mokestį. Už 2,50 € galima pridėti vienkartinį gelinį
-        šildytuvą, kad pristatymo metu krevetės nežūtų nuo šalčio. Jei šaltuoju metų laiku pasirenkama šildytuvo
-        nepirkti, Krevetukas.lt už negyvas krevetes neatsako.
-        <br />
-        Mūsų internetinė užsakymų sistema šiuo metu ruošiama ir netrukus bus pasiekiama.
-        <br />
-        Dėkojame už supratingumą ir palaikymą!
-    </h2>
+    <div id="checkout-section" style="display: none;">
+        <h3 style="margin-top: 2em;">Pristatymo būdas</h3>
+        <div class="row gtr-uniform">
+            <div class="col-12">
+                <input type="radio" id="ship-pickup" name="shipping" value="pickup" checked>
+                <label for="ship-pickup">Atsiimti asmeniškai (Nemokamai) – I-V 16:00-22:00, VI-VII 9:00-22:00</label>
+            </div>
+            <div class="col-12">
+                <input type="radio" id="ship-dpd" name="shipping" value="dpd">
+                <label for="ship-dpd">Siuntimas į DPD paštomatą (+3.50 €)</label>
+            </div>
+            <div class="col-12" id="heatpack-container" style="display: none; padding-left: 3em;">
+                <input type="checkbox" id="heatpack" name="heatpack">
+                <label for="heatpack">Pridėti vienkartinį gelinį šildytuvą (+2.50 €) – Neįsigijus šaltuoju metų laiku,
+                    už negyvas krevetes neatsakome</label>
+            </div>
+        </div>
 
+        <div id="cart-total" style="font-size: 1.5em; font-weight: bold; margin-top: 1em;"></div>
+
+        <h3 style="margin-top: 2em;">Užsakymo pateikimas</h3>
+        <ul class="actions">
+            <li><button id="btn-email" class="button primary">Užsakyti el. paštu</button></li>
+            <li><button id="btn-phone" class="button">Užsakyti telefonu</button></li>
+        </ul>
+
+        <div id="phone-order-info"
+            style="display: none; margin-top: 1em; padding: 1em; background: #f9f9f9; border-left: 4px solid #4379f2;">
+            <h4>Skambinkite: +370 623 65552</h4>
+            <code id="phone-order-text" style="display: block; white-space: pre-wrap; font-family: monospace;"></code>
+        </div>
+    </div>
 </section>
+
+<script>
+    let container, checkoutSection, totalContainer, heatpackContainer;
+    let shipPickup, shipDpd, heatpack;
+    let btnEmail, btnPhone, phoneOrderInfo, phoneOrderText;
+    let eventsAttached = false;
+
+    function render() {
+        if (!container) return;
+        const cart = window.Cart.get();
+
+        if (cart.length === 0) {
+            container.innerHTML = '<p>Jūsų krepšelis tuščias.</p>';
+            checkoutSection.style.display = 'none';
+            return;
+        }
+
+        checkoutSection.style.display = 'block';
+
+        let html = '<div class="table-wrapper"><table class="alt" style="text-align: center;"><thead><tr><th style="text-align: center;">Prekė</th><th style="text-align: center;">Kiekis</th><th style="text-align: center;">Kaina</th><th style="text-align: center;">Suma</th><th></th></tr></thead><tbody>';
+        let itemsTotal = 0;
+
+        cart.forEach(item => {
+            const sum = item.price * item.quantity;
+            itemsTotal += sum;
+            html += `<tr>
+                <td style="vertical-align: middle;">${item.name}</td>
+                <td style="vertical-align: middle;">
+                    <ul class="actions small" style="margin: 0; justify-content: center; align-items: center; flex-wrap: nowrap;">
+                        <li><button class="button small cart-qty-btn" data-id="${item.id}" data-action="decrease">-</button></li>
+                        <li><input type="text" value="${item.quantity}" data-id="${item.id}" class="cart-qty-input" style="width: 3.5em; height: 2.75em; line-height: 2.75em; text-align: center; padding: 0;" /></li>
+                        <li><button class="button small cart-qty-btn" data-id="${item.id}" data-action="increase">+</button></li>
+                    </ul>
+                </td>
+                <td style="vertical-align: middle;">${item.price.toFixed(2)} €</td>
+                <td style="vertical-align: middle;">${sum.toFixed(2)} €</td>
+                <td style="vertical-align: middle;"><button class="button small cart-remove" data-id="${item.id}">Pašalinti</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+
+        updateTotal(itemsTotal);
+        updateOrderSummaries(cart, itemsTotal);
+    }
+
+    function updateTotal(itemsTotal) {
+        let finalTotal = itemsTotal;
+        if (shipDpd.checked) {
+            finalTotal += 3.50;
+            if (heatpack.checked) {
+                finalTotal += 2.50;
+            }
+        }
+        totalContainer.innerHTML = `Viso: ${finalTotal.toFixed(2)} €`;
+    }
+
+    function updateOrderSummaries(cart, itemsTotal) {
+        let finalTotal = itemsTotal + (shipDpd.checked ? 3.50 : 0) + ((shipDpd.checked && heatpack.checked) ? 2.50 : 0);
+        let cartLines = cart.map(item => `- ${item.quantity}x ${item.name}`).join('\n');
+        let minifiedLines = cart.map(item => `${item.quantity}x ${item.name.replace('Neocaridina sp. ', '')}`).join(', ');
+
+        let emailBody = `Sveiki,\n\nNorėčiau užsisakyti šias prekes:\n${cartLines}\n\n`;
+
+        if (shipDpd.checked) {
+            let heatpackText = heatpack.checked ? "Taip" : "Ne";
+            emailBody += `Pristatymas: DPD paštomatas\nŠildytuvas: ${heatpackText}\n\n`;
+            emailBody += `Iš viso: ${finalTotal.toFixed(2)} €\n\n[Įrašykite savo vardą, telefono numerį ir DPD paštomato adresą]`;
+        } else {
+            emailBody += `Pristatymas: Atsiėmimas asmeniškai\n\n`;
+            emailBody += `Iš viso: ${finalTotal.toFixed(2)} €\n\n[Įrašykite savo vardą, telefono numerį ir pageidaujamą atsiėmimo laiką]`;
+        }
+
+        btnEmail.onclick = () => {
+            window.location.href = `mailto:krevetukas.lt@gmail.com?subject=Užsakymas&body=${encodeURIComponent(emailBody)}`;
+        };
+
+        let phoneString = `${minifiedLines}. Pristatymas: ${shipDpd.checked ? 'DPD' + (heatpack.checked ? ' su šildytuvu' : '') : 'Atsiimti asmeniškai'}. Viso: ${finalTotal.toFixed(2)} €`;
+        phoneOrderText.textContent = phoneString;
+    }
+
+    function handleCheckoutOptions() {
+        if (shipDpd.checked) {
+            heatpackContainer.style.display = 'block';
+        } else {
+            heatpackContainer.style.display = 'none';
+            heatpack.checked = false;
+        }
+        render();
+    }
+
+    function handleActions(e) {
+        if (e.target.matches('.cart-remove')) {
+            window.Cart.remove(e.target.dataset.id);
+        } else if (e.target.matches('.cart-qty-btn')) {
+            const id = e.target.dataset.id;
+            const action = e.target.dataset.action;
+            const cart = window.Cart.get();
+            const item = cart.find(i => i.id === id);
+
+            if (item) {
+                const newQty = action === 'increase' ? item.quantity + 1 : item.quantity - 1;
+                window.Cart.updateQuantity(id, newQty);
+            }
+        } else if (e.target.id === 'btn-phone') {
+            phoneOrderInfo.style.display = phoneOrderInfo.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    function handleChange(e) {
+        if (e.target.name === 'shipping' || e.target.name === 'heatpack') {
+            handleCheckoutOptions();
+        } else if (e.target.matches('.cart-qty-input')) {
+            const id = e.target.dataset.id;
+            const qty = parseInt(e.target.value, 10);
+            if (!isNaN(qty)) {
+                window.Cart.updateQuantity(id, qty);
+            } else {
+                render();
+            }
+        }
+    }
+
+    export function mount(doc) {
+        container = doc.querySelector('#cart-container');
+        checkoutSection = doc.querySelector('#checkout-section');
+        totalContainer = doc.querySelector('#cart-total');
+        heatpackContainer = doc.querySelector('#heatpack-container');
+        shipPickup = doc.querySelector('#ship-pickup');
+        shipDpd = doc.querySelector('#ship-dpd');
+        heatpack = doc.querySelector('#heatpack');
+        btnEmail = doc.querySelector('#btn-email');
+        btnPhone = doc.querySelector('#btn-phone');
+        phoneOrderInfo = doc.querySelector('#phone-order-info');
+        phoneOrderText = doc.querySelector('#phone-order-text');
+
+        render();
+
+        window.addEventListener('cart-updated', render);
+
+        if (!eventsAttached) {
+            document.addEventListener('change', handleChange);
+            document.addEventListener('click', handleActions);
+            eventsAttached = true;
+        }
+    }
+
+    export function unmount() {
+        window.removeEventListener('cart-updated', render);
+        if (eventsAttached) {
+            document.removeEventListener('change', handleChange);
+            document.removeEventListener('click', handleActions);
+            eventsAttached = false;
+        }
+    }
+</script>
