@@ -20,7 +20,7 @@
             </div>
             <div class="col-12" id="heatpack-container" style="display: none; padding-left: 3em;">
                 <input type="checkbox" id="heatpack" name="heatpack">
-                <label for="heatpack">Pridėti vienkartinį gelinį šildytuvą (+2.50 €) – Neįsigijus šaltuoju metų laiku,
+                <label for="heatpack">Pridėti vienkartinį gelinį šildytuvą (+3.00 €) – Neįsigijus šaltuoju metų laiku,
                     už negyvas krevetes neatsakome</label>
             </div>
         </div>
@@ -42,6 +42,8 @@
 </section>
 
 <script>
+    const heaterPrice = 3.0
+    const shippingPrice = 3.5
     let container, checkoutSection, totalContainer, heatpackContainer;
     let shipPickup, shipDpd, heatpack;
     let btnEmail, btnPhone, phoneOrderInfo, phoneOrderText;
@@ -90,16 +92,16 @@
     function updateTotal(itemsTotal) {
         let finalTotal = itemsTotal;
         if (shipDpd.checked) {
-            finalTotal += 3.50;
+            finalTotal += shippingPrice;
             if (heatpack.checked) {
-                finalTotal += 2.50;
+                finalTotal += heaterPrice;
             }
         }
         totalContainer.innerHTML = `Viso: ${finalTotal.toFixed(2)} €`;
     }
 
     function updateOrderSummaries(cart, itemsTotal) {
-        let finalTotal = itemsTotal + (shipDpd.checked ? 3.50 : 0) + ((shipDpd.checked && heatpack.checked) ? 2.50 : 0);
+        let finalTotal = itemsTotal + (shipDpd.checked ? shippingPrice : 0) + ((shipDpd.checked && heatpack.checked) ? heaterPrice : 0);
         let cartLines = cart.map(item => `- ${item.quantity}x ${item.name}`).join('\n');
         let minifiedLines = cart.map(item => `${item.quantity}x ${item.name.replace('Neocaridina sp. ', '')}`).join(', ');
 
